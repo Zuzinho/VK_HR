@@ -1,0 +1,1 @@
+drop procedure insert_all_actors(f_id int, actors_id int[]);

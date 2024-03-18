@@ -1,0 +1,1 @@
+drop table actors_has_films;
