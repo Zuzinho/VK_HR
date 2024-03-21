@@ -24,14 +24,14 @@ func (validator *FilmsValidator) IsValidValue(name ColumnName, value string) (an
 	switch name {
 	case FilmName:
 		count := utf8.RuneCountInString(value)
-		if count > 0 && count < 151 {
+		if !(count > 0 && count < 151) {
 			return nil, newInvalidValueError(name, value)
 		}
 
 		return value, nil
 	case FilmDescription:
 		count := utf8.RuneCountInString(value)
-		if count < 1001 {
+		if count > 1000 {
 			return nil, newInvalidValueError(name, value)
 		}
 
@@ -44,7 +44,7 @@ func (validator *FilmsValidator) IsValidValue(name ColumnName, value string) (an
 			return nil, err
 		}
 
-		if dig >= 0 && dig <= 10 {
+		if !(dig >= 0 && dig <= 10) {
 			return nil, newInvalidValueError(name, dig)
 		}
 

@@ -72,11 +72,16 @@ func (repo *ActorsDBRepository) SelectAll(ctx context.Context) (*Actors, error) 
 		var premierDate sql.NullTime
 		var rating sql.NullFloat64
 
-		err = rows.Scan(&actor.ActorID, &actor.FirstName, &actor.SecondName, &actor.Gender, &actor.Birthday.Time,
+		var birthday sql.NullTime
+
+		err = rows.Scan(&actor.ActorID, &actor.FirstName, &actor.SecondName, &actor.Gender, &birthday,
 			&filmID, &name, &description, &premierDate, &rating)
 		if err != nil {
 			log.Errorf("Skipped err when getting actors or films: %s", err.Error())
 			continue
+		}
+		actor.Birthday = customtime.CustomTime{
+			Time: birthday.Time,
 		}
 
 		if prevActor.ActorID != actor.ActorID {

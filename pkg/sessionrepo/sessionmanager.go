@@ -53,7 +53,7 @@ func (manager *SessionManager) Unpack(inToken string) (*Session, error) {
 	if claims, ok := token.Claims.(*CustomClaims); ok && token.Valid {
 		return &Session{
 			Sub: claims.Login,
-			Exp: time.UnixMilli(claims.ExpiresAt),
+			Exp: time.Unix(claims.ExpiresAt, 0),
 		}, nil
 	} else {
 		return nil, newInvalidTokenError(inToken)
