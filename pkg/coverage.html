@@ -1,0 +1,961 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>actorrepo: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">VK_HR/pkg/actorrepo/actor.go (100.0%)</option>
+				
+				<option value="file1">VK_HR/pkg/actorrepo/actordbrepo.go (88.4%)</option>
+				
+				<option value="file2">VK_HR/pkg/customtime/time.go (88.9%)</option>
+				
+				<option value="file3">VK_HR/pkg/env/env.go (66.7%)</option>
+				
+				<option value="file4">VK_HR/pkg/gender/errors.go (50.0%)</option>
+				
+				<option value="file5">VK_HR/pkg/gender/gender.go (100.0%)</option>
+				
+				<option value="file6">VK_HR/pkg/loginformrepo/loginformdbrepo.go (100.0%)</option>
+				
+				<option value="file7">VK_HR/pkg/middleware/middleware.go (0.0%)</option>
+				
+				<option value="file8">VK_HR/pkg/middleware/pair.go (100.0%)</option>
+				
+				<option value="file9">VK_HR/pkg/sessionrepo/errors.go (0.0%)</option>
+				
+				<option value="file10">VK_HR/pkg/sessionrepo/jwtconfig.go (100.0%)</option>
+				
+				<option value="file11">VK_HR/pkg/sessionrepo/sessionmanager.go (56.5%)</option>
+				
+				<option value="file12">VK_HR/pkg/userrepo/errors.go (50.0%)</option>
+				
+				<option value="file13">VK_HR/pkg/userrepo/user.go (100.0%)</option>
+				
+				<option value="file14">VK_HR/pkg/userrepo/userdbrepo.go (100.0%)</option>
+				
+				<option value="file15">VK_HR/pkg/validator/actorsvalidator.go (100.0%)</option>
+				
+				<option value="file16">VK_HR/pkg/validator/errors.go (50.0%)</option>
+				
+				<option value="file17">VK_HR/pkg/validator/filmsvalidator.go (88.9%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package actorrepo
+
+import (
+        "VK_HR/pkg/customtime"
+        "VK_HR/pkg/filmrepo"
+        "VK_HR/pkg/gender"
+        "context"
+)
+
+type Actor struct {
+        ActorID    int32                 `json:"actor_id,omitempty"`
+        FirstName  string                `json:"first_name" validate:"required,min=1"`
+        SecondName string                `json:"second_name" validate:"required,min=1"`
+        Gender     gender.Gender         `json:"gender" validate:"oneof=Male Female"`
+        Birthday   customtime.CustomTime `json:"birthday"`
+        Films      *filmrepo.Films       `json:"films,omitempty"`
+}
+
+type Actors []*Actor
+
+func (actors *Actors) Append(actor *Actor) <span class="cov8" title="1">{
+        *actors = append(*actors, actor)
+}</span>
+
+type ActorsRepository interface {
+        Insert(ctx context.Context, actor *Actor) (int, error)
+        Update(ctx context.Context, setClause *string, args *[]any, id int) error
+        Delete(ctx context.Context, id int) error
+        SelectAll(ctx context.Context) (*Actors, error)
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package actorrepo
+
+import (
+        "VK_HR/pkg/customtime"
+        "VK_HR/pkg/filmrepo"
+        "context"
+        "database/sql"
+        "fmt"
+        log "github.com/sirupsen/logrus"
+)
+
+type ActorsDBRepository struct {
+        DB *sql.DB
+}
+
+func NewActorsDBRepository(db *sql.DB) *ActorsDBRepository <span class="cov8" title="1">{
+        return &amp;ActorsDBRepository{
+                DB: db,
+        }
+}</span>
+
+func (repo *ActorsDBRepository) Insert(ctx context.Context, actor *Actor) (int, error) <span class="cov8" title="1">{
+        var insertedID int
+
+        err := repo.DB.QueryRowContext(ctx, "insert into actors (first_name, second_name, gender, birthday) values "+
+                "($1, $2, $3, $4) returning actor_id", actor.FirstName, actor.SecondName, actor.Gender,
+                actor.Birthday.Format("2006-01-02")).Scan(&amp;insertedID)
+
+        return insertedID, err
+}</span>
+
+func (repo *ActorsDBRepository) Update(ctx context.Context, setClause *string, args *[]any, id int) error <span class="cov8" title="1">{
+        queryString := fmt.Sprintf("update actors set %s where actor_id = $%d", *setClause, len(*args)+1)
+
+        smtm, err := repo.DB.PrepareContext(ctx, queryString)
+        defer smtm.Close()
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">_, err = smtm.ExecContext(ctx, append(*args, id)...)
+        return err</span>
+}
+
+func (repo *ActorsDBRepository) Delete(ctx context.Context, id int) error <span class="cov8" title="1">{
+        _, err := repo.DB.ExecContext(ctx, "delete from actors where actor_id = $1", id)
+
+        return err
+}</span>
+
+func (repo *ActorsDBRepository) SelectAll(ctx context.Context) (*Actors, error) <span class="cov8" title="1">{
+        rows, err := repo.DB.QueryContext(ctx, "SELECT a.actor_id, a.first_name, a.second_name, a.gender, a.birthday, "+
+                "f.film_id, f.name, f.description, f.premier_date, f.rating "+
+                "FROM actors a LEFT JOIN actors_has_films ahf ON a.actor_id = ahf.actor_id "+
+                "LEFT JOIN films f ON ahf.film_id = f.film_id order by a.actor_id")
+        defer func() </span><span class="cov8" title="1">{
+                if rows != nil </span><span class="cov8" title="1">{
+                        rows.Close()
+                }</span>
+        }()
+        <span class="cov8" title="1">if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">actors := make(Actors, 0)
+        prevActor := &amp;Actor{}
+        for rows.Next() </span><span class="cov8" title="1">{
+                actor := &amp;Actor{}
+
+                var filmID sql.NullInt32
+                var name, description sql.NullString
+                var premierDate sql.NullTime
+                var rating sql.NullFloat64
+
+                var birthday sql.NullTime
+
+                err = rows.Scan(&amp;actor.ActorID, &amp;actor.FirstName, &amp;actor.SecondName, &amp;actor.Gender, &amp;birthday,
+                        &amp;filmID, &amp;name, &amp;description, &amp;premierDate, &amp;rating)
+                if err != nil </span><span class="cov0" title="0">{
+                        log.Errorf("Skipped err when getting actors or films: %s", err.Error())
+                        continue</span>
+                }
+                <span class="cov8" title="1">actor.Birthday = customtime.CustomTime{
+                        Time: birthday.Time,
+                }
+
+                if prevActor.ActorID != actor.ActorID </span><span class="cov8" title="1">{
+                        if prevActor.ActorID &gt; 0 </span><span class="cov0" title="0">{
+                                actors.Append(prevActor)
+                        }</span>
+
+                        <span class="cov8" title="1">films := make(filmrepo.Films, 0)
+                        actor.Films = &amp;films
+
+                        prevActor = actor</span>
+                }
+
+                <span class="cov8" title="1">film := &amp;filmrepo.Film{
+                        FilmID:      filmID.Int32,
+                        Name:        name.String,
+                        Description: description.String,
+                        PremierDate: customtime.CustomTime{Time: premierDate.Time},
+                        Rating:      float32(rating.Float64),
+                }
+
+                prevActor.Films.Append(film)</span>
+        }
+
+        <span class="cov8" title="1">actors.Append(prevActor)
+
+        return &amp;actors, rows.Err()</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package customtime
+
+import "time"
+
+type CustomTime struct {
+        time.Time
+}
+
+func (date *CustomTime) UnmarshalJSON(b []byte) error <span class="cov8" title="1">{
+        s := string(b)
+
+        // Убираем кавычки вокруг JSON строки
+        s = s[1 : len(s)-1]
+
+        t, err := time.Parse("2006-01-02", s)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">date.Time = t
+        return nil</span>
+}
+
+func (date *CustomTime) MarshalJSON() ([]byte, error) <span class="cov8" title="1">{
+        str := date.Format("2006-01-02")
+
+        return []byte("\"" + str + "\""), nil
+}</span>
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package env
+
+import (
+        "VK_HR/pkg/sessionrepo"
+        "github.com/joho/godotenv"
+        log "github.com/sirupsen/logrus"
+        "os"
+        "strconv"
+)
+
+func InitEnv() <span class="cov0" title="0">{
+        if err := godotenv.Load(".env"); err != nil </span><span class="cov0" title="0">{
+                log.Fatal("No .env file")
+        }</span>
+}
+
+func MustDBConnString() string <span class="cov8" title="1">{
+        val, exist := os.LookupEnv("DB_CONNECTION_STRING")
+        if !exist </span><span class="cov0" title="0">{
+                log.Fatal("No db connection string")
+        }</span>
+
+        <span class="cov8" title="1">return val</span>
+}
+
+func MustPort() string <span class="cov8" title="1">{
+        val, exist := os.LookupEnv("PORT")
+        if !exist </span><span class="cov0" title="0">{
+                log.Fatal("No db connection string")
+        }</span>
+
+        <span class="cov8" title="1">return val</span>
+}
+
+func MustJWTConfig() *sessionrepo.JWTConfig <span class="cov8" title="1">{
+        methodName, exist := os.LookupEnv("JWT_METHOD_NAME")
+        if !exist </span><span class="cov0" title="0">{
+                log.Fatal("No jwt method name")
+        }</span>
+
+        <span class="cov8" title="1">tokenSecret, exist := os.LookupEnv("JWT_TOKEN_SECRET")
+        if !exist </span><span class="cov0" title="0">{
+                log.Fatal("No jwt secret token")
+        }</span>
+
+        <span class="cov8" title="1">return sessionrepo.NewJWTConfig(methodName, []byte(tokenSecret))</span>
+}
+
+func MustMaxConnCount() int <span class="cov8" title="1">{
+        str, exist := os.LookupEnv("MAX_CONNECTION_COUNT")
+        if !exist </span><span class="cov0" title="0">{
+                log.Fatal("no max connection count")
+        }</span>
+
+        <span class="cov8" title="1">dig, err := strconv.Atoi(str)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal(err)
+        }</span>
+
+        <span class="cov8" title="1">return dig</span>
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package gender
+
+import (
+        "fmt"
+)
+
+type UnknownGenderError struct {
+        gender Gender
+}
+
+func newUnknownGenderError(gender Gender) UnknownGenderError <span class="cov8" title="1">{
+        return UnknownGenderError{
+                gender: gender,
+        }
+}</span>
+
+func (err UnknownGenderError) Error() string <span class="cov0" title="0">{
+        return fmt.Sprintf("unknown gender '%s'", err.gender)
+}</span>
+
+var (
+        UnknownGenderErr = UnknownGenderError{}
+)
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package gender
+
+type Gender string
+
+const (
+        Male   Gender = "Male"
+        Female Gender = "Female"
+)
+
+func (gender Gender) IsValid() error <span class="cov8" title="1">{
+        switch gender </span>{
+        case Male, Female:<span class="cov8" title="1">
+                return nil</span>
+        default:<span class="cov8" title="1">
+                return newUnknownGenderError(gender)</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package loginformrepo
+
+import (
+        "context"
+        "database/sql"
+)
+
+type LoginFormsDBRepository struct {
+        DB *sql.DB
+}
+
+func NewLoginFormsDBRepository(db *sql.DB) *LoginFormsDBRepository <span class="cov8" title="1">{
+        return &amp;LoginFormsDBRepository{
+                DB: db,
+        }
+}</span>
+
+func (repo *LoginFormsDBRepository) SignUp(ctx context.Context, form *LoginForm) error <span class="cov8" title="1">{
+        _, err := repo.DB.ExecContext(ctx, "insert into login_forms (login, password) values ($1, $2)", form.Login, form.Password)
+
+        return err
+}</span>
+
+func (repo *LoginFormsDBRepository) SignIn(ctx context.Context, form *LoginForm) (bool, error) <span class="cov8" title="1">{
+        var exist bool
+
+        err := repo.DB.QueryRowContext(ctx, "select is_exist($1, $2)", form.Login, form.Password).Scan(&amp;exist)
+
+        return exist, err
+}</span>
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package middleware
+
+import (
+        "VK_HR/pkg/sessionrepo"
+        "VK_HR/pkg/userrepo"
+        "context"
+        "fmt"
+        "net/http"
+        "strings"
+        "time"
+
+        log "github.com/sirupsen/logrus"
+)
+
+type IMiddleware interface {
+        Auth(next http.Handler) http.Handler
+        RecoverPanic(next http.Handler) http.Handler
+        Logging(next http.Handler) http.Handler
+        AddAuthHandler(path, method string)
+}
+
+type Middleware struct {
+        SessionManager sessionrepo.SessionPacker
+        UsersRepo      userrepo.UsersRepository
+        AuthHandlers   map[Pair]struct{}
+}
+
+func NewMiddleware(packer sessionrepo.SessionPacker, repository userrepo.UsersRepository) *Middleware <span class="cov0" title="0">{
+        return &amp;Middleware{
+                SessionManager: packer,
+                UsersRepo:      repository,
+                AuthHandlers:   make(map[Pair]struct{}),
+        }
+}</span>
+
+func (middleware *Middleware) Auth(next http.Handler) http.Handler <span class="cov0" title="0">{
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) </span><span class="cov0" title="0">{
+                log.WithFields(log.Fields{
+                        "path":   r.URL.Path,
+                        "method": r.Method,
+                }).Info("checking authorize for query...")
+
+                if _, ok := middleware.AuthHandlers[NewPair(r.URL.Path, r.Method)]; !ok </span><span class="cov0" title="0">{
+                        log.Info("no need authorize")
+                        next.ServeHTTP(w, r)
+                        return
+                }</span>
+
+                <span class="cov0" title="0">log.Info("need authorize")
+
+                token := r.Header.Get("Authorization")
+                token = strings.TrimPrefix(token, "Bearer ")
+
+                s, err := middleware.SessionManager.Unpack(token)
+                if err != nil </span><span class="cov0" title="0">{
+                        middleware.jsonHTTPError(w, err, http.StatusUnauthorized)
+                        return
+                }</span>
+
+                <span class="cov0" title="0">role, err := middleware.UsersRepo.SelectRole(r.Context(), s.Sub)
+                if err != nil </span><span class="cov0" title="0">{
+                        middleware.jsonHTTPError(w, err, http.StatusInternalServerError)
+                        return
+                }</span>
+
+                <span class="cov0" title="0">ctx := context.WithValue(r.Context(), "user_role", role)
+                next.ServeHTTP(w, r.WithContext(ctx))</span>
+        })
+}
+
+func (middleware *Middleware) RecoverPanic(next http.Handler) http.Handler <span class="cov0" title="0">{
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) </span><span class="cov0" title="0">{
+                defer func() </span><span class="cov0" title="0">{
+                        if err := recover(); err != nil </span><span class="cov0" title="0">{
+                                log.WithFields(log.Fields{
+                                        "path":   r.URL.Path,
+                                        "method": r.Method,
+                                        "err":    err,
+                                }).Error("query called panic")
+                        }</span>
+                }()
+
+                <span class="cov0" title="0">next.ServeHTTP(w, r)</span>
+        })
+}
+
+func (middleware *Middleware) Logging(next http.Handler) http.Handler <span class="cov0" title="0">{
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) </span><span class="cov0" title="0">{
+                log.WithFields(log.Fields{
+                        "path":   r.URL.Path,
+                        "method": r.Method,
+                        "host":   r.Host,
+                }).Info("handling query...")
+
+                now := time.Now()
+                next.ServeHTTP(w, r)
+                dur := time.Since(now)
+
+                log.Infof("took %d milliseconds", dur.Milliseconds())
+        }</span>)
+}
+
+func (middleware *Middleware) AddAuthHandler(path, method string) <span class="cov0" title="0">{
+        middleware.AuthHandlers[NewPair(path, method)] = struct{}{}
+}</span>
+
+func (middleware *Middleware) jsonHTTPError(w http.ResponseWriter, err error, status int) <span class="cov0" title="0">{
+        log.WithFields(log.Fields{
+                "err":    err.Error(),
+                "status": status,
+        }).Error("http error")
+
+        http.Error(w, fmt.Sprintf("{\"err\":\"%s\"}", err.Error()), status)
+}</span>
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package middleware
+
+type Pair struct {
+        path   string
+        method string
+}
+
+func NewPair(path, method string) Pair <span class="cov8" title="1">{
+        return Pair{
+                path:   path,
+                method: method,
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package sessionrepo
+
+import (
+        "fmt"
+)
+
+type InvalidTokenMapClaimsError struct {
+        token string
+}
+
+func newInvalidTokenMapClaimsError(token string) InvalidTokenMapClaimsError <span class="cov0" title="0">{
+        return InvalidTokenMapClaimsError{
+                token: token,
+        }
+}</span>
+
+func (err InvalidTokenMapClaimsError) Error() string <span class="cov0" title="0">{
+        return fmt.Sprintf("invalid map claims for token '%s'", err.token)
+}</span>
+
+type InvalidTokenError struct {
+        token string
+}
+
+func newInvalidTokenError(token string) InvalidTokenError <span class="cov0" title="0">{
+        return InvalidTokenError{
+                token: token,
+        }
+}</span>
+
+func (err InvalidTokenError) Error() string <span class="cov0" title="0">{
+        return fmt.Sprintf("invalid token '%s'", err.token)
+}</span>
+
+type NoPayloadKeyError struct {
+        key string
+}
+
+func newNoPayloadKeyError(key string) NoPayloadKeyError <span class="cov0" title="0">{
+        return NoPayloadKeyError{
+                key: key,
+        }
+}</span>
+
+func (err NoPayloadKeyError) Error() string <span class="cov0" title="0">{
+        return fmt.Sprintf("no key '%s' in payload", err.key)
+}</span>
+
+type InvalidPayloadValueError struct {
+        value any
+}
+
+func newInvalidPayloadValueError(value any) InvalidPayloadValueError <span class="cov0" title="0">{
+        return InvalidPayloadValueError{
+                value: value,
+        }
+}</span>
+
+func (err InvalidPayloadValueError) Error() string <span class="cov0" title="0">{
+        return fmt.Sprintf("invalid type of value '%v'", err.value)
+}</span>
+
+var (
+        NoPayloadKeyErr        = NoPayloadKeyError{}
+        InvalidPayloadValueErr = InvalidPayloadValueError{}
+)
+</pre>
+		
+		<pre class="file" id="file10" style="display: none">package sessionrepo
+
+import "github.com/dgrijalva/jwt-go"
+
+type JWTConfig struct {
+        Method      jwt.SigningMethod
+        TokenSecret []byte
+}
+
+func NewJWTConfig(methodName string, tokenSecret []byte) *JWTConfig <span class="cov8" title="1">{
+        return &amp;JWTConfig{
+                Method:      jwt.GetSigningMethod(methodName),
+                TokenSecret: tokenSecret,
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">package sessionrepo
+
+import (
+        "github.com/dgrijalva/jwt-go"
+        "time"
+)
+
+type CustomClaims struct {
+        Login string `json:"login"`
+        jwt.StandardClaims
+}
+
+type SessionManager struct {
+        Config *JWTConfig
+}
+
+func NewSessionManager(config *JWTConfig) *SessionManager <span class="cov8" title="1">{
+        return &amp;SessionManager{
+                Config: config,
+        }
+}</span>
+
+func (manager *SessionManager) Pack(sub string) (*string, error) <span class="cov8" title="1">{
+        expirationTime := time.Now().Add(72 * time.Hour)
+        claims := &amp;CustomClaims{
+                Login: sub,
+                StandardClaims: jwt.StandardClaims{
+                        ExpiresAt: expirationTime.Unix(),
+                },
+        }
+
+        token := jwt.NewWithClaims(manager.Config.Method, claims)
+
+        tokenString, err := token.SignedString(manager.Config.TokenSecret)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">return &amp;tokenString, nil</span>
+}
+
+func (manager *SessionManager) Unpack(inToken string) (*Session, error) <span class="cov8" title="1">{
+        claims := &amp;CustomClaims{}
+
+        token, err := jwt.ParseWithClaims(inToken, claims, func(token *jwt.Token) (interface{}, error) </span><span class="cov8" title="1">{
+                return manager.Config.TokenSecret, nil
+        }</span>)
+
+        <span class="cov8" title="1">if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">if claims, ok := token.Claims.(*CustomClaims); ok &amp;&amp; token.Valid </span><span class="cov8" title="1">{
+                return &amp;Session{
+                        Sub: claims.Login,
+                        Exp: time.Unix(claims.ExpiresAt, 0),
+                }, nil
+        }</span> else<span class="cov0" title="0"> {
+                return nil, newInvalidTokenError(inToken)
+        }</span>
+}
+
+func unpackValue[V string | time.Time](target any, payload jwt.MapClaims, key string) error <span class="cov0" title="0">{
+        val, exist := payload[key]
+        if !exist </span><span class="cov0" title="0">{
+                return newNoPayloadKeyError(key)
+        }</span>
+
+        <span class="cov0" title="0">target, ok := val.(V)
+        if !ok </span><span class="cov0" title="0">{
+                return newInvalidPayloadValueError(val)
+        }</span>
+
+        <span class="cov0" title="0">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file12" style="display: none">package userrepo
+
+import "fmt"
+
+type UnknownUserRoleError struct {
+        role Role
+}
+
+func newUnknownUserRoleError(role Role) UnknownUserRoleError <span class="cov8" title="1">{
+        return UnknownUserRoleError{
+                role: role,
+        }
+}</span>
+
+func (err UnknownUserRoleError) Error() string <span class="cov0" title="0">{
+        return fmt.Sprintf("unknown user role '%s'", err.role)
+}</span>
+
+var (
+        UnknownUserRoleErr = UnknownUserRoleError{}
+)
+</pre>
+		
+		<pre class="file" id="file13" style="display: none">package userrepo
+
+import "context"
+
+type Role string
+
+const (
+        RegularUser Role = "Regular User"
+        Admin       Role = "Admin"
+)
+
+func (role Role) IsValid() error <span class="cov8" title="1">{
+        switch role </span>{
+        case RegularUser, Admin:<span class="cov8" title="1">
+                return nil</span>
+        default:<span class="cov8" title="1">
+                return newUnknownUserRoleError(role)</span>
+        }
+}
+
+type User struct {
+        Login string `json:"login"`
+        Role  Role   `json:"role"`
+}
+
+type UsersRepository interface {
+        Insert(ctx context.Context, login string, role Role) error
+        SelectRole(ctx context.Context, login string) (Role, error)
+}
+</pre>
+		
+		<pre class="file" id="file14" style="display: none">package userrepo
+
+import (
+        "context"
+        "database/sql"
+)
+
+type UserDBRepository struct {
+        DB *sql.DB
+}
+
+func NewUserDBRepository(db *sql.DB) *UserDBRepository <span class="cov8" title="1">{
+        return &amp;UserDBRepository{
+                DB: db,
+        }
+}</span>
+
+func (repo *UserDBRepository) Insert(ctx context.Context, login string, role Role) error <span class="cov8" title="1">{
+        _, err := repo.DB.ExecContext(ctx, "insert into users (login, role) values ($1, $2)", login, role)
+
+        return err
+}</span>
+
+func (repo *UserDBRepository) SelectRole(ctx context.Context, login string) (Role, error) <span class="cov8" title="1">{
+        var role Role
+        err := repo.DB.QueryRowContext(ctx, "select role from users where login = $1", login).Scan(&amp;role)
+
+        return role, err
+}</span>
+</pre>
+		
+		<pre class="file" id="file15" style="display: none">package validator
+
+import (
+        "VK_HR/pkg/gender"
+        "time"
+)
+
+const (
+        ActorFirstName  ColumnName = "first_name"
+        ActorSecondName ColumnName = "second_name"
+        ActorGender     ColumnName = "gender"
+        ActorBirthday   ColumnName = "birthday"
+)
+
+type ActorsValidator struct {
+}
+
+func NewActorsValidator() *ActorsValidator <span class="cov8" title="1">{
+        return &amp;ActorsValidator{}
+}</span>
+
+func (validator *ActorsValidator) IsValidValue(name ColumnName, value string) (any, error) <span class="cov8" title="1">{
+        switch name </span>{
+        case ActorFirstName, ActorSecondName:<span class="cov8" title="1">
+                return value, nil</span>
+        case ActorGender:<span class="cov8" title="1">
+                gender := gender.Gender(value)
+                return gender, gender.IsValid()</span>
+        case ActorBirthday:<span class="cov8" title="1">
+                return time.Parse("2006-01-02", value)</span>
+        default:<span class="cov8" title="1">
+                return nil, newInvalidColumnNameError(name)</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file16" style="display: none">package validator
+
+import "fmt"
+
+type InvalidColumnNameError struct {
+        columnName ColumnName
+}
+
+func newInvalidColumnNameError(name ColumnName) InvalidColumnNameError <span class="cov8" title="1">{
+        return InvalidColumnNameError{
+                columnName: name,
+        }
+}</span>
+
+func (err InvalidColumnNameError) Error() string <span class="cov0" title="0">{
+        return fmt.Sprintf("no column by name '%s'", err.columnName)
+}</span>
+
+type InvalidValueError struct {
+        columnName ColumnName
+        value      any
+}
+
+func newInvalidValueError(name ColumnName, value any) InvalidValueError <span class="cov8" title="1">{
+        return InvalidValueError{
+                columnName: name,
+                value:      value,
+        }
+}</span>
+
+func (err InvalidValueError) Error() string <span class="cov0" title="0">{
+        return fmt.Sprintf("column by name '%s' can not be equal '%v'", err.columnName, err.value)
+}</span>
+
+var (
+        InvalidColumnNameErr = InvalidColumnNameError{}
+        InvalidValueErr      = InvalidValueError{}
+)
+</pre>
+		
+		<pre class="file" id="file17" style="display: none">package validator
+
+import (
+        "strconv"
+        "time"
+        "unicode/utf8"
+)
+
+const (
+        FilmName        ColumnName = "name"
+        FilmDescription ColumnName = "description"
+        FilmPremierDate ColumnName = "premier_date"
+        FilmRating      ColumnName = "rating"
+)
+
+type FilmsValidator struct {
+}
+
+func NewFilmsValidator() *FilmsValidator <span class="cov8" title="1">{
+        return &amp;FilmsValidator{}
+}</span>
+
+func (validator *FilmsValidator) IsValidValue(name ColumnName, value string) (any, error) <span class="cov8" title="1">{
+        switch name </span>{
+        case FilmName:<span class="cov8" title="1">
+                count := utf8.RuneCountInString(value)
+                if !(count &gt; 0 &amp;&amp; count &lt; 151) </span><span class="cov8" title="1">{
+                        return nil, newInvalidValueError(name, value)
+                }</span>
+
+                <span class="cov8" title="1">return value, nil</span>
+        case FilmDescription:<span class="cov8" title="1">
+                count := utf8.RuneCountInString(value)
+                if count &gt; 1000 </span><span class="cov0" title="0">{
+                        return nil, newInvalidValueError(name, value)
+                }</span>
+
+                <span class="cov8" title="1">return value, nil</span>
+        case FilmPremierDate:<span class="cov8" title="1">
+                return time.Parse("2006-01-02", value)</span>
+        case FilmRating:<span class="cov8" title="1">
+                dig, err := strconv.ParseFloat(value, 32)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+
+                <span class="cov8" title="1">if !(dig &gt;= 0 &amp;&amp; dig &lt;= 10) </span><span class="cov8" title="1">{
+                        return nil, newInvalidValueError(name, dig)
+                }</span>
+
+                <span class="cov8" title="1">return dig, nil</span>
+        default:<span class="cov8" title="1">
+                return nil, newInvalidColumnNameError(name)</span>
+        }
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
