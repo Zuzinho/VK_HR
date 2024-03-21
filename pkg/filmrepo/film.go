@@ -1,17 +1,17 @@
 package filmrepo
 
 import (
+	"VK_HR/pkg/customtime"
 	"context"
-	"time"
 )
 
 type Film struct {
-	FilmID      int       `json:"film_id,omitempty"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	PremierDate time.Time `json:"premier_date"`
-	Rating      float32   `json:"rating"`
-	ActorsID    []int     `json:"actors_id,omitempty"`
+	FilmID      int32                 `json:"film_id,omitempty"`
+	Name        string                `json:"name" validate:"required,min=1,max=150"`
+	Description string                `json:"description" validate:"max=1000"`
+	PremierDate customtime.CustomTime `json:"premier_date"`
+	Rating      float32               `json:"rating"  validate:"required,gte=0,lte=10"`
+	ActorsID    []int                 `json:"actors_id,omitempty"`
 }
 
 type Films []*Film
