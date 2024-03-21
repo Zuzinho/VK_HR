@@ -24,8 +24,7 @@ func (repo *LoginFormsDBRepository) SignUp(ctx context.Context, form *LoginForm)
 func (repo *LoginFormsDBRepository) SignIn(ctx context.Context, form *LoginForm) (bool, error) {
 	var exist bool
 
-	err := repo.DB.QueryRowContext(ctx, "return exists(select * from login_forms "+
-		"where login = $1 and password = $2)", form.Login, form.Password).Scan(&exist)
+	err := repo.DB.QueryRowContext(ctx, "select is_exist($1, $2)", form.Login, form.Password).Scan(&exist)
 
 	return exist, err
 }
