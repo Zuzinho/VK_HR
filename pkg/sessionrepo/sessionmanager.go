@@ -1,10 +1,14 @@
 package sessionrepo
 
 import (
-	"fmt"
-	"github.com/golang-jwt/jwt"
+	"github.com/dgrijalva/jwt-go"
 	"time"
 )
+
+type CustomClaims struct {
+	Login string `json:"login"`
+	jwt.StandardClaims
+}
 
 type SessionManager struct {
 	Config *JWTConfig
@@ -17,10 +21,15 @@ func NewSessionManager(config *JWTConfig) *SessionManager {
 }
 
 func (manager *SessionManager) Pack(sub string) (*string, error) {
-	token := jwt.NewWithClaims(manager.Config.Method, jwt.MapClaims{
-		"sub": sub,
-		"exp": time.Now().Add(24 * time.Hour),
-	})
+	expirationTime := time.Now().Add(72 * time.Hour)
+	claims := &CustomClaims{
+		Login: sub,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: expirationTime.Unix(),
+		},
+	}
+
+	token := jwt.NewWithClaims(manager.Config.Method, claims)
 
 	tokenString, err := token.SignedString(manager.Config.TokenSecret)
 	if err != nil {
@@ -31,41 +40,24 @@ func (manager *SessionManager) Pack(sub string) (*string, error) {
 }
 
 func (manager *SessionManager) Unpack(inToken string) (*Session, error) {
-	hashSecretGetter := func(token *jwt.Token) (interface{}, error) {
-		method, ok := token.Method.(*jwt.SigningMethodHMAC)
-		if !ok || method != manager.Config.Method {
-			return nil, fmt.Errorf("bad sign method")
-		}
+	claims := &CustomClaims{}
+
+	token, err := jwt.ParseWithClaims(inToken, claims, func(token *jwt.Token) (interface{}, error) {
 		return manager.Config.TokenSecret, nil
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
-	token, err := jwt.Parse(inToken, hashSecretGetter)
-	if err != nil || !token.Valid {
+	if claims, ok := token.Claims.(*CustomClaims); ok && token.Valid {
+		return &Session{
+			Sub: claims.Login,
+			Exp: time.UnixMilli(claims.ExpiresAt),
+		}, nil
+	} else {
 		return nil, newInvalidTokenError(inToken)
 	}
-
-	payload, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		return nil, newInvalidTokenMapClaimsError(inToken)
-	}
-
-	var sub string
-	var exp time.Time
-
-	err = unpackValue[string](&sub, payload, "sub")
-	if err != nil {
-		return nil, err
-	}
-
-	err = unpackValue[time.Time](&exp, payload, "exp")
-	if err != nil {
-		return nil, err
-	}
-
-	return &Session{
-		Sub: sub,
-		Exp: exp,
-	}, nil
 }
 
 func unpackValue[V string | time.Time](target any, payload jwt.MapClaims, key string) error {
