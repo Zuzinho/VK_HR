@@ -40,8 +40,16 @@ func (err NoRequiredParamError) Error() string {
 	return fmt.Sprintf("no required parameter '%s'", err.paramName)
 }
 
+type NoRequiredAccessError struct {
+}
+
+func (NoRequiredAccessError) Error() string {
+	return "tried admin query, but not Admin role"
+}
+
 var (
 	IncorrectLoginPasswordErr = IncorrectLoginPasswordError{}
 	NoUserRoleErr             = NoUserRoleError{}
 	NoRequiredParamErr        = NoRequiredParamError{}
+	NoRequiredAccessErr       = NoRequiredAccessError{}
 )
