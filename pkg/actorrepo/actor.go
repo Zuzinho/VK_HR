@@ -1,19 +1,19 @@
 package actorrepo
 
 import (
+	"VK_HR/pkg/customtime"
 	"VK_HR/pkg/filmrepo"
 	"VK_HR/pkg/gender"
 	"context"
-	"time"
 )
 
 type Actor struct {
-	ActorID    int             `json:"actor_id,omitempty"`
-	FirstName  string          `json:"first_name"`
-	SecondName string          `json:"second_name"`
-	Gender     gender.Gender   `json:"gender"`
-	Birthday   time.Time       `json:"birthday"`
-	Films      *filmrepo.Films `json:"films,omitempty"`
+	ActorID    int32                 `json:"actor_id,omitempty"`
+	FirstName  string                `json:"first_name" validate:"required,min=1"`
+	SecondName string                `json:"second_name" validate:"required,min=1"`
+	Gender     gender.Gender         `json:"gender" validate:"oneof=Male Female"`
+	Birthday   customtime.CustomTime `json:"birthday"`
+	Films      *filmrepo.Films       `json:"films,omitempty"`
 }
 
 type Actors []*Actor
