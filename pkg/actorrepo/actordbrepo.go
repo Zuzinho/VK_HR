@@ -106,7 +106,9 @@ func (repo *ActorsDBRepository) SelectAll(ctx context.Context) (*Actors, error) 
 		prevActor.Films.Append(film)
 	}
 
-	actors.Append(prevActor)
+	if prevActor.ActorID > 0 {
+		actors.Append(prevActor)
+	}
 
 	return &actors, rows.Err()
 }
