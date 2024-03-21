@@ -5,6 +5,7 @@ import (
 	"VK_HR/pkg/validator"
 	"encoding/json"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 	"strconv"
@@ -12,6 +13,13 @@ import (
 )
 
 func httpError(w http.ResponseWriter, err error, status int) {
+	log.WithFields(log.Fields{
+		"err":    err.Error(),
+		"status": status,
+	}).Error("called error")
+
+	w.Header().Set("Content-Type", "application/json")
+
 	http.Error(w, fmt.Sprintf("{\"err\": \"%s\"}", err.Error()), status)
 }
 
@@ -41,6 +49,10 @@ func (*AppHandler) checkAuth(r *http.Request) error {
 	role, ok := r.Context().Value("user_role").(userrepo.Role)
 	if !ok {
 		return NoUserRoleErr
+	}
+
+	if role != userrepo.Admin {
+
 	}
 
 	return role.IsValid()
