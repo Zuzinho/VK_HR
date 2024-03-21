@@ -5,9 +5,17 @@ import "VK_HR/pkg/validator"
 type SortingDirection string
 
 const (
-	ASG  SortingDirection = "ASG"
-	DESG SortingDirection = "DESG"
+	ASC  SortingDirection = "ASC"
+	DESC SortingDirection = "DESC"
 )
+
+func (direction SortingDirection) IsValid() error {
+	if direction != ASC && direction != DESC {
+		return newUnknownSortingDirectionError(direction)
+	}
+
+	return nil
+}
 
 type SortingConfig struct {
 	ColumnName validator.ColumnName
@@ -26,10 +34,10 @@ func NewSortingConfig(name validator.ColumnName, direction SortingDirection) (*S
 	}
 
 	if direction == "" {
-		direction = DESG
+		direction = DESC
 	} else {
-		if direction != ASG && direction != DESG {
-			return nil, newUnknownSortingDirectionError(direction)
+		if err := direction.IsValid(); err != nil {
+			return nil, err
 		}
 	}
 
