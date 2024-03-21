@@ -1,17 +1,15 @@
 package sessionrepo
 
-import "github.com/golang-jwt/jwt"
+import "github.com/dgrijalva/jwt-go"
 
 type JWTConfig struct {
-	Method      *jwt.SigningMethodHMAC
+	Method      jwt.SigningMethod
 	TokenSecret []byte
 }
 
 func NewJWTConfig(methodName string, tokenSecret []byte) *JWTConfig {
 	return &JWTConfig{
-		Method: &jwt.SigningMethodHMAC{
-			Name: methodName,
-		},
+		Method:      jwt.GetSigningMethod(methodName),
 		TokenSecret: tokenSecret,
 	}
 }
