@@ -3,8 +3,9 @@ package env
 import (
 	"VK_HR/pkg/sessionrepo"
 	"github.com/joho/godotenv"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"os"
+	"strconv"
 )
 
 func InitEnv() {
@@ -43,4 +44,18 @@ func MustJWTConfig() *sessionrepo.JWTConfig {
 	}
 
 	return sessionrepo.NewJWTConfig(methodName, []byte(tokenSecret))
+}
+
+func MustMaxConnCount() int {
+	str, exist := os.LookupEnv("MAX_CONNECTION_COUNT")
+	if !exist {
+		log.Fatal("no max connection count")
+	}
+
+	dig, err := strconv.Atoi(str)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return dig
 }
