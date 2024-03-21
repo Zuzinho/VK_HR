@@ -1,10 +1,12 @@
 package actorrepo
 
 import (
+	"VK_HR/pkg/customtime"
 	"VK_HR/pkg/filmrepo"
 	"context"
 	"database/sql"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 )
 
 type ActorsDBRepository struct {
@@ -21,7 +23,8 @@ func (repo *ActorsDBRepository) Insert(ctx context.Context, actor *Actor) (int, 
 	var insertedID int
 
 	err := repo.DB.QueryRowContext(ctx, "insert into actors (first_name, second_name, gender, birthday) values "+
-		"($1, $2, $3, $4) returning actor_id", actor.FirstName, actor.SecondName, actor.Gender, actor.Birthday).Scan(&insertedID)
+		"($1, $2, $3, $4) returning actor_id", actor.FirstName, actor.SecondName, actor.Gender,
+		actor.Birthday.Format("2006-01-02")).Scan(&insertedID)
 
 	return insertedID, err
 }
@@ -48,38 +51,57 @@ func (repo *ActorsDBRepository) Delete(ctx context.Context, id int) error {
 func (repo *ActorsDBRepository) SelectAll(ctx context.Context) (*Actors, error) {
 	rows, err := repo.DB.QueryContext(ctx, "SELECT a.actor_id, a.first_name, a.second_name, a.gender, a.birthday, "+
 		"f.film_id, f.name, f.description, f.premier_date, f.rating "+
-		"FROM actors a JOIN actors_has_films ahf ON a.actor_id = ahf.actor_id "+
-		"JOIN films f ON ahf.film_id = f.film_id")
+		"FROM actors a LEFT JOIN actors_has_films ahf ON a.actor_id = ahf.actor_id "+
+		"LEFT JOIN films f ON ahf.film_id = f.film_id order by a.actor_id")
+	defer func() {
+		if rows != nil {
+			rows.Close()
+		}
+	}()
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
 	actors := make(Actors, 0)
 	prevActor := &Actor{}
 	for rows.Next() {
 		actor := &Actor{}
 
-		err = rows.Scan(&actor.ActorID, &actor.FirstName, &actor.SecondName, &actor.Gender, &actor.Birthday)
+		var filmID sql.NullInt32
+		var name, description sql.NullString
+		var premierDate sql.NullTime
+		var rating sql.NullFloat64
+
+		err = rows.Scan(&actor.ActorID, &actor.FirstName, &actor.SecondName, &actor.Gender, &actor.Birthday.Time,
+			&filmID, &name, &description, &premierDate, &rating)
 		if err != nil {
+			log.Errorf("Skipped err when getting actors or films: %s", err.Error())
 			continue
 		}
 
 		if prevActor.ActorID != actor.ActorID {
-			actors.Append(prevActor)
+			if prevActor.ActorID > 0 {
+				actors.Append(prevActor)
+			}
+
+			films := make(filmrepo.Films, 0)
+			actor.Films = &films
 
 			prevActor = actor
 		}
 
-		film := &filmrepo.Film{}
-
-		err = rows.Scan(&film.FilmID, &film.Name, &film.Description, &film.PremierDate, &film.Rating)
-		if err != nil {
-			continue
+		film := &filmrepo.Film{
+			FilmID:      filmID.Int32,
+			Name:        name.String,
+			Description: description.String,
+			PremierDate: customtime.CustomTime{Time: premierDate.Time},
+			Rating:      float32(rating.Float64),
 		}
 
 		prevActor.Films.Append(film)
 	}
+
+	actors.Append(prevActor)
 
 	return &actors, rows.Err()
 }
