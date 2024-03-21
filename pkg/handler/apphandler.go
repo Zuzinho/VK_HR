@@ -4,8 +4,8 @@ import (
 	"VK_HR/pkg/actorrepo"
 	"VK_HR/pkg/filmrepo"
 	"VK_HR/pkg/validator"
+	validate "github.com/go-playground/validator/v10"
 	"net/http"
-	"reflect"
 )
 
 type AppHandler struct {
@@ -13,6 +13,7 @@ type AppHandler struct {
 	FilmsRepo      filmrepo.FilmsRepository
 	ActorValidator validator.ValueValidator
 	FilmValidator  validator.ValueValidator
+	validator      *validate.Validate
 }
 
 func NewAppHandler(actorsRepo actorrepo.ActorsRepository, filmsRepo filmrepo.FilmsRepository,
@@ -22,6 +23,7 @@ func NewAppHandler(actorsRepo actorrepo.ActorsRepository, filmsRepo filmrepo.Fil
 		FilmsRepo:      filmsRepo,
 		ActorValidator: actorValidator,
 		FilmValidator:  filmValidator,
+		validator:      validate.New(),
 	}
 }
 
@@ -34,6 +36,12 @@ func (handler *AppHandler) AddActor(w http.ResponseWriter, r *http.Request) {
 
 	actor := new(actorrepo.Actor)
 	err = read(r, actor)
+	if err != nil {
+		httpError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	err = handler.validator.Struct(actor)
 	if err != nil {
 		httpError(w, err, http.StatusBadRequest)
 		return
@@ -120,20 +128,19 @@ func (handler *AppHandler) AddFilm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mapRange := reflect.ValueOf(*film).MapRange()
-	for mapRange.Next() {
-		k := mapRange.Key()
-		v := mapRange.Value()
-
-		if _, err = handler.FilmValidator.IsValidValue(validator.ColumnName(k.String()), v.String()); err != nil {
-			if err != nil {
-				httpError(w, err, http.StatusBadRequest)
-				return
-			}
-		}
+	err = handler.validator.Struct(film)
+	if err != nil {
+		httpError(w, err, http.StatusBadRequest)
+		return
 	}
 
 	insertedID, err := handler.FilmsRepo.InsertFilm(r.Context(), film)
+	if err != nil {
+		httpError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	err = handler.FilmsRepo.InsertActorsByFilm(r.Context(), insertedID, film.ActorsID)
 	if err != nil {
 		httpError(w, err, http.StatusInternalServerError)
 		return
