@@ -9,7 +9,7 @@ import (
 )
 
 func InitEnv() {
-	if err := godotenv.Load(".env"); err != nil {
+	if err := godotenv.Load("./cmd/VK_HR/.env"); err != nil {
 		log.Fatal("No .env file")
 	}
 }
