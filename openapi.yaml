@@ -1,0 +1,559 @@
+openapi: 3.0.0
+servers:
+  - url: http://localhost:8080/
+info:
+  title: Фильмотека
+  version: 1.0.0
+paths:
+  /login:
+    post:
+      operationId: login
+      summary: Метод авторизации пользователя
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Login_Form"
+      responses:
+        "200":
+          description: 
+            Успешная авторизация пользователя
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Auth_Response"
+        "400":
+          description:
+            Неправильный формат запроса или неверные данные авторизации
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description:
+            Ошибка со стороны сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /register:
+    post:
+      operationId: register
+      summary: Метод регистрации пользователя
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Login_Form"
+      responses:
+        "200":
+          description: 
+            Успешная регистрация пользователя
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Auth_Response"
+        "400":
+          description:
+            Неправильный формат запроса или неверные данные регистрации
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description:
+            Ошибка со стороны сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  
+  /actor:
+    post:
+      operationId: Add_Actor
+      summary: Метод добавления нового актера
+      tags:
+        - Actor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Actor"
+      responses:
+        "200":
+          description: 
+            Успешная добавление актера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Inserted_Response"
+        "400":
+          description:
+            Неправильный формат запроса или данных
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description:
+            Нет прав для этой операции
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description:
+            Ошибка со стороны сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      operationId: Update_Actor
+      summary: Метод обновления данных о актере
+      tags:
+        - Actor
+      parameters:
+        - name: actor_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: first_name
+          in: query
+          schema:
+            type: string
+        - name: second_name
+          in: query
+          schema:
+            type: string
+        - name: gender
+          in: query
+          schema:
+            type: string
+            enum:
+              - Male
+              - Female
+        - name: birthday
+          in: query
+          schema:
+            type: string
+          example: 2003-03-03
+          
+      responses:
+        "200":
+          description: 
+            Успешная обновление данных о актере
+        "400":
+          description:
+            Неправильный формат запроса или данных
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description:
+            Нет прав для этой операции
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description:
+            Ошибка со стороны сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: Delete_Actor
+      summary: Метод удаления актера
+      tags:
+        - Actor
+      parameters:
+        - name: actor_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: 
+            Успешное удаление актера
+        "400":
+          description:
+            Неправильный формат запроса или данных
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description:
+            Нет прав для этой операции
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description:
+            Ошибка со стороны сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /film:
+    post:
+      operationId: Add_Film
+      summary: Метод добавления нового фильма
+      tags:
+        - Film
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Film"
+      responses:
+        "200":
+          description: 
+            Успешная добавление фильма
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Inserted_Response"
+        "400":
+          description:
+            Неправильный формат запроса или данных
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description:
+            Нет прав для этой операции
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description:
+            Ошибка со стороны сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      operationId: Update_Film
+      summary: Метод обновления данных о фильме
+      tags:
+        - Film
+      parameters:
+        - name: film_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: description
+          in: query
+          schema:
+            type: string
+        - name: premier_date
+          in: query
+          schema:
+            type: string
+          example: 2001-01-01
+        - name: rating
+          in: query
+          schema:
+            type: number
+            format: float
+      responses:
+        "200":
+          description: 
+            Успешная обновление данных о фильме
+        "400":
+          description:
+            Неправильный формат запроса или данных
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description:
+            Нет прав для этой операции
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description:
+            Ошибка со стороны сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: Delete_Film
+      summary: Метод удаления фильма
+      tags:
+        - Film
+      parameters:
+        - name: film_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: 
+            Успешное удаление фильма
+        "400":
+          description:
+            Неправильный формат запроса или данных
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description:
+            Нет прав для этой операции
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description:
+            Ошибка со стороны сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    get:  
+      operationId: Get_Film
+      summary: Метод получения данных о фильме
+      tags:
+        - Film
+      parameters:
+        - name: film
+          description: Фрагмент названия фильма
+          in: query
+          schema:
+            type: string
+        - name: actor
+          description: Фрагмент имени актера из фильма
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 
+            Успешное получения данных о фильме
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Film"
+        "500":
+          description:
+            Ошибка со стороны сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /actors:
+    get:  
+      operationId: Get_Actors
+      summary: Метод получения актеров и их фильмов
+      tags:
+        - Actor
+      responses:
+        "200":
+          description: 
+            Успешное получения всех актеров
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Actors"
+        "500":
+          description:
+            Ошибка со стороны сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /films:
+    get:  
+      operationId: Get_Films
+      summary: Метод получения фильмов с сортировкой
+      tags:
+        - Film
+      parameters:
+        - name: column_name
+          description: Свойство для сортировки
+          in: query
+          schema:
+            type: string
+        - name: direction
+          description: Напраление сортировки
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 
+            Успешное получения всех фильмов
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Films"
+        "500":
+          description:
+            Ошибка со стороны сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT                        
+  schemas:
+    Actor:
+      type: object
+      
+      required:
+        - first_name
+        - second_name
+        - gender
+        - birthday
+        
+      properties:
+        actor_id:
+          type: integer
+          format: int32
+          minimum: 1
+        first_name:
+          type: string
+        second_name:
+          type: string
+        gender:
+          type: string
+          enum:
+            - Male
+            - Female
+        birthday:
+          type: string
+        films:
+          $ref: "#/components/schemas/Films"
+        
+      example:
+        actor_id: 1
+        first_name: Ivan
+        second_name: Ivanon
+        gender: Male
+        birthday: 2000-01-01
+        
+    Actors:
+      type: array
+      items: 
+        $ref: "#/components/schemas/Actor"
+
+    Film:
+      type: object
+      
+      required:
+        - name
+        - description
+        - premier_date
+        - rating
+      
+      properties:
+        film_id:
+          type: integer
+          format: int32
+          minimum: 1
+        name:
+          type: string
+        description:
+          type: string
+        premier_date:
+          type: string
+        rating:
+         type: number
+         format: float
+        actors_id:
+          type: array
+          items:
+            type: integer
+            format: int32
+      
+      example:
+        film_id: 1
+        name: Batman
+        description: Best film
+        premier_date: 2008-10-11
+        rating: 8.9
+        actors_id: [1,2,9]
+      
+    Films:
+      type: array
+      items: 
+        $ref: "#/components/schemas/Film"
+    Auth_Response:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+      
+    Inserted_Response:
+      type: object
+      required:
+        - inserted_id
+      properties:
+        inserted_id:
+          type: integer
+          format: int32
+          
+    Login_Form:
+      type: object
+      required:
+        - login
+        - password
+      properties:
+        login:
+          type: string
+        password:
+          type: string
+      example:
+        login: Zuza
+        password: 12345
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+      example:
+        error: invalid token 12345
+security:
+  - bearerAuth: ["#/paths//actor/post"]
