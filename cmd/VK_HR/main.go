@@ -88,12 +88,12 @@ func main() {
 	rout.HandleFunc(router.NewPair("/register", "POST"), authHandler.Register)
 
 	rout.HandleFuncWithAuth(router.NewPair("/actor", "POST"), appHandler.AddActor)
-	rout.HandleFuncWithAuth(router.NewPair("/actor", "UPDATE"), appHandler.UpdateActor)
+	rout.HandleFuncWithAuth(router.NewPair("/actor", "PUT"), appHandler.UpdateActor)
 	rout.HandleFuncWithAuth(router.NewPair("/actor", "DELETE"), appHandler.DeleteActor)
 	rout.HandleFunc(router.NewPair("/actors", "GET"), appHandler.GetAllActors)
 
 	rout.HandleFuncWithAuth(router.NewPair("/film", "POST"), appHandler.AddFilm)
-	rout.HandleFuncWithAuth(router.NewPair("/film", "UPDATE"), appHandler.UpdateFilm)
+	rout.HandleFuncWithAuth(router.NewPair("/film", "PUT"), appHandler.UpdateFilm)
 	rout.HandleFuncWithAuth(router.NewPair("/film", "DELETE"), appHandler.DeleteFilm)
 	rout.HandleFunc(router.NewPair("/films", "GET"), appHandler.GetAllFilms)
 	rout.HandleFunc(router.NewPair("/film", "GET"), appHandler.GetFilmByFragment)
